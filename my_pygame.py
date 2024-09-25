@@ -1,5 +1,7 @@
 import pygame, sys, os, random
 
+# Đường dẫn đến thư mục hiện tại (chứa tệp my_pygame.py)
+current_dir = os.path.dirname(__file__)
 # Trong pygame di chuyển đi xuống là tăng y ,di chuyển sang phải là tăng x
 
 
@@ -40,7 +42,10 @@ def check_collision(pipes):
     if bird_rect.top <= -75 or bird_rect.bottom >= 650:
         return False
     return True
+
+
 # End xử lí va chạm
+
 
 # Xử lí đập cánh chim
 def bird_animation():
@@ -55,20 +60,45 @@ def rotate_bird(bird1):
     return new_bird
 
 
+#  Tính điểm
+def score_display(game_state):
+    if game_state == "main game":
+        score_surface = game_font.render(str(int(score)), True, (255, 255, 255))
+        score_rect = score_surface.get_rect(center=(216, 100))
+        screen.blit(score_surface, score_rect)
+    if game_state == "game_over":
+        score_surface = game_font.render(f"Score: {int(score)}", True, (255, 255, 255))
+        score_rect = score_surface.get_rect(center=(216, 100))
+        screen.blit(score_surface, score_rect)
+
+        high_score_surface = game_font.render(
+            f" High Score: {int(high_score)}", True, (255, 255, 255)
+        )
+        high_score_rect = high_score_surface.get_rect(center=(216, 630))
+        screen.blit(high_score_surface, high_score_rect)
+
+
+# High_score
+def update_score(score, high_score):
+    if score > high_score:
+        high_score = score
+    return high_score
+
+
 pygame.init()
 #  Tạo khung hình
 screen = pygame.display.set_mode((432, 768))
 # FPS
 clock = pygame.time.Clock()
-
+game_font = pygame.font.Font(os.path.join(current_dir, "04B_19.TTF"), 40)
 # Tạo các biến cho trò chơi
 gravity = 0.25
 bird_movement = 0
 game_active = True
+score = 0
+high_score = 0
 
 
-# Đường dẫn đến thư mục hiện tại (chứa tệp my_pygame.py)
-current_dir = os.path.dirname(__file__)
 #  Chèn background
 
 
@@ -117,6 +147,13 @@ spawnpipe = pygame.USEREVENT
 pygame.time.set_timer(spawnpipe, 1200)
 pipe_height = [200, 300, 400]
 
+# Tạo màn hình kết thúc
+game_over_surface_path = pipe_surface_path = os.path.join(
+    current_dir, "assets", "message.png"
+)
+game_over_surface = pygame.image.load(game_over_surface_path).convert_alpha()
+game_over_surface = pygame.transform.scale2x(game_over_surface)
+game_over_rect = game_over_surface.get_rect(center=(216, 384))
 # While loop của trò chơi
 while True:
     for event in pygame.event.get():
@@ -132,6 +169,7 @@ while True:
                 pipe_list.clear()
                 bird_rect.center = (100, 384)
                 bird_movement = 0
+                score = 0
         if event.type == spawnpipe:
             # append những ống mới vào list
             pipe_list.extend(create_pipe())
@@ -153,6 +191,12 @@ while True:
         # Ống
         pipe_list = move_pipe(pipe_list)
         draw_pipe(pipe_list)
+        score += 0.01
+        score_display("main game")
+    else:
+        screen.blit(game_over_surface,game_over_rect)
+        high_score = update_score(score, high_score)
+        score_display("game_over")
     # Sàn
     floor_x_pos -= 1
     draw_floor()
