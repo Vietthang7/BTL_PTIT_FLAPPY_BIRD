@@ -38,8 +38,10 @@ def draw_pipe(pipes):
 def check_collision(pipes):
     for pipe in pipes:
         if bird_rect.colliderect(pipe):
+            hit_sound.play()
             return False
     if bird_rect.top <= -75 or bird_rect.bottom >= 650:
+        hit_sound.play()
         return False
     return True
 
@@ -85,6 +87,8 @@ def update_score(score, high_score):
     return high_score
 
 
+# Chỉnh âm thanh phù hợp với pygame
+pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=512)
 pygame.init()
 #  Tạo khung hình
 screen = pygame.display.set_mode((432, 768))
@@ -154,6 +158,14 @@ game_over_surface_path = pipe_surface_path = os.path.join(
 game_over_surface = pygame.image.load(game_over_surface_path).convert_alpha()
 game_over_surface = pygame.transform.scale2x(game_over_surface)
 game_over_rect = game_over_surface.get_rect(center=(216, 384))
+
+
+# Chèn âm thanh
+flap_sound = pygame.mixer.Sound(os.path.join(current_dir, "sound", "sfx_wing.wav"))
+hit_sound = pygame.mixer.Sound(os.path.join(current_dir, "sound", "sfx_hit.wav"))
+score_sound = pygame.mixer.Sound(os.path.join(current_dir, "sound", "siu.mp3"))
+score_sound_countdown = 100
+
 # While loop của trò chơi
 while True:
     for event in pygame.event.get():
@@ -163,7 +175,8 @@ while True:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and game_active:
                 bird_movement = 0
-                bird_movement = -11
+                bird_movement = -7
+                flap_sound.play()
             if event.key == pygame.K_SPACE and game_active == False:
                 game_active = True
                 pipe_list.clear()
@@ -193,8 +206,12 @@ while True:
         draw_pipe(pipe_list)
         score += 0.01
         score_display("main game")
+        score_sound_countdown -= 1
+        if score_sound_countdown <= 0:
+            score_sound.play()
+            score_sound_countdown = 100
     else:
-        screen.blit(game_over_surface,game_over_rect)
+        screen.blit(game_over_surface, game_over_rect)
         high_score = update_score(score, high_score)
         score_display("game_over")
     # Sàn
